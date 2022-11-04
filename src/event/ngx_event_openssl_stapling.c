@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 #include <ngx_event_connect.h>
+#include <stdio.h>
 
 
 #if (!defined OPENSSL_NO_OCSP && defined SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB)
@@ -917,7 +918,10 @@ ngx_ssl_ocsp_validate(ngx_connection_t *c)
         const char *propq = "dummy";
         // X509_LOOKUP_load_file_ex is a macro in x509_vfy.h.in that resolves to
         // X509_LOOKUP_ctrl_ex, but only the latter is in libcrypto.a.
-        X509_LOOKUP_ctrl_ex(lookup, 1, "path to file", X509_FILETYPE_PEM, NULL, libctx, propq);
+        char str[256];
+        printf("Enter path to Root CA:\n");
+        fgets(str, 256, stdin);
+        X509_LOOKUP_ctrl_ex(lookup, 1, &str[0], X509_FILETYPE_PEM, NULL, libctx, propq);
 
         if (store == NULL) {
             ngx_ssl_error(NGX_LOG_ERR, c->log, 0,
