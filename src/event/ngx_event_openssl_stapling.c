@@ -920,7 +920,10 @@ ngx_ssl_ocsp_validate(ngx_connection_t *c)
         // X509_LOOKUP_ctrl_ex, but only the latter is in libcrypto.a.
         char str[256];
         printf("Enter path to Root CA:\n");
-        fgets(str, 256, stdin);
+        if (fgets(str, 256, stdin) == NULL) {
+            ngx_ssl_error(NGX_LOG_ERR, c->log, 0,
+                          "Reading Root CA path failed");
+        };
         X509_LOOKUP_ctrl_ex(lookup, 1, &str[0], X509_FILETYPE_PEM, NULL, libctx, propq);
 
         if (store == NULL) {
