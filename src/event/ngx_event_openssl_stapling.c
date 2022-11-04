@@ -908,7 +908,17 @@ ngx_ssl_ocsp_validate(ngx_connection_t *c)
 #endif
 
     if (ocsp->certs == NULL) {
-        store = SSL_CTX_get_cert_store(ssl_ctx);
+        // nosajmik: porting over code from openssl/apps.c::setup_verify
+        // so that we can add the root CA cert manually.
+        // store = SSL_CTX_get_cert_store(ssl_ctx);
+        store = X509_STORE_new();
+        X509_LOOKUP *lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
+        OSSL_LIB_CTX *libctx = OSSL_LIB_CTX_new();
+        const char *propq = "dummy";
+        // X509_LOOKUP_load_file_ex is a macro in x509_vfy.h.in that resolves to
+        // X509_LOOKUP_ctrl_ex, but only the latter is in libcrypto.a.
+        X509_LOOKUP_ctrl_ex(lookup, 1, "path to file", X509_FILETYPE_PEM, NULL, libctx, propq);
+
         if (store == NULL) {
             ngx_ssl_error(NGX_LOG_ERR, c->log, 0,
                           "SSL_CTX_get_cert_store() failed");
